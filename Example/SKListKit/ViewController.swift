@@ -7,6 +7,8 @@
 //
 
 import UIKit
+import SKListKit
+import AsyncDisplayKit
 
 class ViewController: UIViewController {
 
@@ -15,10 +17,19 @@ class ViewController: UIViewController {
         // Do any additional setup after loading the view, typically from a nib.
     }
 
-    override func didReceiveMemoryWarning() {
-        super.didReceiveMemoryWarning()
-        // Dispose of any resources that can be recreated.
+    func setupUI() {
+        let sectionModel = SKSectionModel()
+        
+        let cellModel = SKCellNodeModel<DemoCellNode>()
+        
+        sectionModel.cellModels.append(cellModel)
+        
+        let adapter = SKCollectionNodeAdapter()
+        
+        adapter.sectionModels = [sectionModel]
     }
-
 }
 
+class DemoCellNode: ASCellNode {
+    
+}

@@ -1,0 +1,23 @@
+PODS:
+  - SKListKit (0.1.0):
+    - Texture/Core (~> 2.8)
+  - Texture/Core (2.8.1)
+
+DEPENDENCIES:
+  - SKListKit (from `../`)
+
+SPEC REPOS:
+  trunk:
+    - Texture
+
+EXTERNAL SOURCES:
+  SKListKit:
+    :path: "../"
+
+SPEC CHECKSUMS:
+  SKListKit: b444f7e1404132fcb5f3f187c16c0619b6389de4
+  Texture: 8ecf6984065a1e54f06bf97b349ecca28582acd7
+
+PODFILE CHECKSUM: 701f50051261278495af1e96ee8fae6b1401851a
+
+COCOAPODS: 1.9.1
