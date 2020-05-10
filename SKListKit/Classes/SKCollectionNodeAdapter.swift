@@ -7,6 +7,7 @@
 
 import Foundation
 import AsyncDisplayKit
+import DifferenceKit
 
 public class SKCollectionNodeAdapter: NSObject {
     
@@ -34,7 +35,7 @@ public class SKCollectionNodeAdapter: NSObject {
 }
 
 extension SKCollectionNodeAdapter {
-    func cellModelForItem(at indexPath: IndexPath) -> SKCellNodeModelProtocol? {
+    func cellModelForItem(at indexPath: IndexPath) -> SKCellNodeModel? {
         if let sectionModel = self.sectionModelForSection(indexPath.section) {
             if sectionModel.cellModels.indices.contains(indexPath.item) {
                 return sectionModel.cellModels[indexPath.item]
@@ -81,7 +82,9 @@ extension SKCollectionNodeAdapter: ASCollectionDataSource {
             if let node = cell as? SKCellNodeProtocol {
                 node.isFirstCell = isFirstCell
                 node.isLastCell = isLastCell
-                node.config(cellModel?.dataModel as Any)
+                if let dataModel = cellModel {
+                    node.config(dataModel)
+                }
             }
             
             if self.reloadedIndexPathes.contains(indexPath) {
@@ -104,7 +107,34 @@ extension SKCollectionNodeAdapter: ASCollectionDataSource {
     public func reloadData() {
         let indexPaths = collectionNode.indexPathsForVisibleItems
         reloadedIndexPathes = Set(indexPaths)
+        
         collectionNode.reloadData()
+    }
+    
+    typealias SKArraySection = ArraySection<SKSectionModel, SKCellNodeModel>
+    
+    public func apply(_ newSectionModels: [SKSectionModel]) {
+        let indexPaths = collectionNode.indexPathsForVisibleItems
+        reloadedIndexPathes = Set(indexPaths)
+        
+        let source: [SKArraySection] = sectionModels.map {
+            return ArraySection(model: $0, elements: $0.cellModels)
+        }
+        
+        let target: [SKArraySection] = sectionModels.map {
+            return ArraySection(model: $0, elements: $0.cellModels)
+        }
+        
+        let changeset = StagedChangeset(source: source, target: target)
+        
+        self.reload(using: changeset)
+        
+    }
+    
+    func reload(using stagedChangeset: StagedChangeset<[SKArraySection]>) {
+        collectionNode.view.reload(using: stagedChangeset) { (data) in
+            sectionModels = data.map { $0.model }
+        }
     }
 }
 

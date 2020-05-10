@@ -9,15 +9,13 @@ import Foundation
 import AsyncDisplayKit
 
 class SKCellNode: ASCellNode, SKCellNodeProtocol {
+    
     var isFirstCell: Bool = false
     
     var isLastCell: Bool = false
     
-    func config(_ model: Any) {
+    func config(_ model: SKCellNodeModel) {
         
     }
-    
-    
-    
     
 }

@@ -7,34 +7,63 @@
 
 import Foundation
 import AsyncDisplayKit
+import DifferenceKit
 
-public protocol SKCellNodeProtocol: class {
+public protocol SKCellNodeProtocol: AnyObject {
     var isFirstCell: Bool { get set }
     var isLastCell: Bool { get set }
     
-    func config(_ model: Any)
+    func config(_ model: SKCellNodeModel)
 }
+
+typealias SKCellModelProtocol = SKCellNodeModelProtocol & Differentiable
 
 public typealias SKCellNodeTapAction = (()->Void)
 public typealias SKCellNodeBlock = (()->ASCellNode)
 
-@objc public protocol SKCellNodeModelProtocol: class {
+public protocol SKCellNodeModelProtocol: Differentiable {
+    
+    var identifier: String { get }
+    
     var cellNodeBlock: SKCellNodeBlock? { get }
     var cellNodeTapAction: SKCellNodeTapAction? { get }
     
-    var dataModel: Any? { get set }
 }
 
-open class SKCellNodeModel<T: ASCellNode>: NSObject, SKCellNodeModelProtocol {
+open class SKCellNodeModel: NSObject, SKCellNodeModelProtocol {
+    public var identifier: String
     
-    public var dataModel: Any?
-    
-    open var cellNodeBlock: SKCellNodeBlock? {
-        return {
-            return T()
-        }
-    }
+    open var cellNodeBlock: SKCellNodeBlock?
     
     open var cellNodeTapAction: SKCellNodeTapAction?
     
+    public typealias DifferenceIdentifier = String
+    
+    public var differenceIdentifier: String {
+        return identifier
+    }
+    
+    public init(identifier: String = UUID().uuidString) {
+        self.identifier = identifier
+        
+        super.init()
+    }
+    
+    @discardableResult
+    public func setIdentifier(_ identifier: String) -> SKCellNodeModel {
+        self.identifier = identifier
+        return self
+    }
+    
+    @discardableResult
+    public func setCellNodeBlock(_ nodeBlock: @escaping SKCellNodeBlock) -> SKCellNodeModel {
+        self.cellNodeBlock = nodeBlock
+        return self
+    }
+    
+    @discardableResult
+    public func setCellNodeTapAction(_ tapAction: @escaping SKCellNodeTapAction) -> SKCellNodeModel {
+        self.cellNodeTapAction = tapAction
+        return self
+    }
 }

@@ -6,9 +6,25 @@
 //
 
 import Foundation
+import DifferenceKit
 
-open class SKSectionModel: NSObject {
+open class SKSectionModel: NSObject, Differentiable {
+    public var identifier: String
+    
+    public var differenceIdentifier: String {
+        return identifier
+    }
+    
+    public typealias DifferenceIdentifier = String
+    
     public var sectionInset = UIEdgeInsets.zero
     
-    public var cellModels: [SKCellNodeModelProtocol] = []
+    public var cellModels: [SKCellNodeModel] = []
+    
+    public init(identifier: String = UUID().uuidString) {
+        self.identifier = identifier
+        
+        super.init()
+    }
+    
 }

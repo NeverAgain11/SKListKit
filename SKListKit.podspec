@@ -39,4 +39,6 @@ TODO: Add long description of the pod here.
   s.frameworks = 'UIKit', 'CoreFoundation'
   
   s.dependency "Texture/Core", '~> 2.8'
+  s.dependency 'DifferenceKit'
+  
 end
