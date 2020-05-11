@@ -8,12 +8,31 @@
 import Foundation
 import AsyncDisplayKit
 import DifferenceKit
+import ObjectiveC
+
+private var identifierContext: UInt8 = 0
+
+public extension NSObject {
+    var skIdentifier: String {
+        get {
+            if let id = objc_getAssociatedObject(self, &identifierContext) as? String {
+                return id
+            }
+            let id = UUID().uuidString
+            objc_setAssociatedObject(self, &identifierContext, id, .OBJC_ASSOCIATION_COPY_NONATOMIC)
+            return id
+        }
+        set {
+            objc_setAssociatedObject(self, &identifierContext, newValue, .OBJC_ASSOCIATION_COPY_NONATOMIC)
+        }
+    }
+}
 
 public protocol SKCellNodeProtocol: AnyObject {
     var isFirstCell: Bool { get set }
     var isLastCell: Bool { get set }
     
-    func config(_ model: SKCellNodeModel)
+    func configure(_ model: AnyObject)
 }
 
 typealias SKCellModelProtocol = SKCellNodeModelProtocol & Differentiable
@@ -23,47 +42,53 @@ public typealias SKCellNodeBlock = (()->ASCellNode)
 
 public protocol SKCellNodeModelProtocol: Differentiable {
     
-    var identifier: String { get }
-    
     var cellNodeBlock: SKCellNodeBlock? { get }
     var cellNodeTapAction: SKCellNodeTapAction? { get }
     
 }
 
 open class SKCellNodeModel: NSObject, SKCellNodeModelProtocol {
-    public var identifier: String
     
     open var cellNodeBlock: SKCellNodeBlock?
     
     open var cellNodeTapAction: SKCellNodeTapAction?
     
+    public var dataModel: AnyObject?
+    
     public typealias DifferenceIdentifier = String
     
     public var differenceIdentifier: String {
-        return identifier
-    }
-    
-    public init(identifier: String = UUID().uuidString) {
-        self.identifier = identifier
-        
-        super.init()
+        return skIdentifier
     }
     
     @discardableResult
-    public func setIdentifier(_ identifier: String) -> SKCellNodeModel {
-        self.identifier = identifier
+    public func identifier(_ identifier: String) -> SKCellNodeModel {
+        self.skIdentifier = identifier
         return self
     }
     
     @discardableResult
-    public func setCellNodeBlock(_ nodeBlock: @escaping SKCellNodeBlock) -> SKCellNodeModel {
-        self.cellNodeBlock = nodeBlock
+    public func cellNode(_ nodeClass: ASCellNode.Type) -> SKCellNodeModel {
+        self.cellNodeBlock = {
+            return nodeClass.init()
+        }
         return self
     }
     
     @discardableResult
-    public func setCellNodeTapAction(_ tapAction: @escaping SKCellNodeTapAction) -> SKCellNodeModel {
-        self.cellNodeTapAction = tapAction
+    public func model<T: AnyObject, Model: NSObject>(_ model: Model, observer: T, tapAction: @escaping ((T, Model)->Void)) -> SKCellNodeModel {
+        self.dataModel = model
+        self.identifier(model.skIdentifier)
+        self.cellNodeTapAction = { [weak self, weak observer] in
+            guard let `self` = self,
+                let ob = observer
+                else { return }
+            tapAction(ob, model)
+        }
         return self
+    }
+    
+    open func isContentEqual(to source: SKCellNodeModel) -> Bool {
+        return self.differenceIdentifier == source.differenceIdentifier
     }
 }

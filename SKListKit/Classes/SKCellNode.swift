@@ -8,13 +8,19 @@
 import Foundation
 import AsyncDisplayKit
 
-class SKCellNode: ASCellNode, SKCellNodeProtocol {
+open class SKCellNode: ASCellNode, SKCellNodeProtocol {
     
-    var isFirstCell: Bool = false
+    public var isFirstCell: Bool = false
     
-    var isLastCell: Bool = false
+    public var isLastCell: Bool = false
     
-    func config(_ model: SKCellNodeModel) {
+    public override init() {
+        super.init()
+        
+        automaticallyManagesSubnodes = true
+    }
+    
+    open func configure(_ model: AnyObject) {
         
     }
     

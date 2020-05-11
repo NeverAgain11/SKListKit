@@ -15,8 +15,8 @@ public class SKCollectionNodeAdapter: NSObject {
     
     public lazy var collectionNode: ASCollectionNode = {
         let node = ASCollectionNode(collectionViewLayout: collectionLayout)
-        node.registerSupplementaryNode(ofKind: UICollectionElementKindSectionHeader)
-        node.registerSupplementaryNode(ofKind: UICollectionElementKindSectionFooter)
+        node.registerSupplementaryNode(ofKind: UICollectionView.elementKindSectionHeader)
+        node.registerSupplementaryNode(ofKind: UICollectionView.elementKindSectionFooter)
         node.view.alwaysBounceVertical = true
         node.allowsSelection = true
         node.delegate = self;
@@ -28,6 +28,8 @@ public class SKCollectionNodeAdapter: NSObject {
     public lazy var collectionLayout: UICollectionViewFlowLayout = {
         let layout = UICollectionViewFlowLayout()
         layout.scrollDirection = .vertical
+        layout.minimumLineSpacing = 0
+        layout.minimumInteritemSpacing = 0
         return layout
     }()
     
@@ -82,8 +84,8 @@ extension SKCollectionNodeAdapter: ASCollectionDataSource {
             if let node = cell as? SKCellNodeProtocol {
                 node.isFirstCell = isFirstCell
                 node.isLastCell = isLastCell
-                if let dataModel = cellModel {
-                    node.config(dataModel)
+                if let dataModel = cellModel?.dataModel {
+                    node.configure(dataModel)
                 }
             }
             
@@ -111,9 +113,7 @@ extension SKCollectionNodeAdapter: ASCollectionDataSource {
         collectionNode.reloadData()
     }
     
-    typealias SKArraySection = ArraySection<SKSectionModel, SKCellNodeModel>
-    
-    public func apply(_ newSectionModels: [SKSectionModel]) {
+    public func apply(_ newSectionModels: [SKSectionModel], animated: Bool = false) {
         let indexPaths = collectionNode.indexPathsForVisibleItems
         reloadedIndexPathes = Set(indexPaths)
         
@@ -121,27 +121,70 @@ extension SKCollectionNodeAdapter: ASCollectionDataSource {
             return ArraySection(model: $0, elements: $0.cellModels)
         }
         
-        let target: [SKArraySection] = sectionModels.map {
+        let target: [SKArraySection] = newSectionModels.map {
             return ArraySection(model: $0, elements: $0.cellModels)
         }
         
         let changeset = StagedChangeset(source: source, target: target)
         
-        self.reload(using: changeset)
-        
+        collectionNode.reload(using: changeset, animated: animated) { (data) in
+            self.sectionModels = data.map { $0.model }
+        }
     }
     
-    func reload(using stagedChangeset: StagedChangeset<[SKArraySection]>) {
-        collectionNode.view.reload(using: stagedChangeset) { (data) in
-            sectionModels = data.map { $0.model }
+}
+
+typealias SKArraySection = ArraySection<SKSectionModel, SKCellNodeModel>
+
+extension ASCollectionNode {
+    func reload(using stagedChangeset: StagedChangeset<[SKArraySection]>, animated: Bool, setData: ([SKArraySection])->Void) {
+        
+        for changeset in stagedChangeset {
+            performBatch(animated: animated, updates: {
+                setData(changeset.data)
+                
+                if !changeset.sectionDeleted.isEmpty {
+                    deleteSections(IndexSet(changeset.sectionDeleted))
+                }
+                
+                if !changeset.sectionInserted.isEmpty {
+                    insertSections(IndexSet(changeset.sectionInserted))
+                }
+                
+                if !changeset.sectionUpdated.isEmpty {
+                    reloadSections(IndexSet(changeset.sectionUpdated))
+                }
+                
+                for (source, target) in changeset.sectionMoved {
+                    moveSection(source, toSection: target)
+                }
+                
+                if !changeset.elementDeleted.isEmpty {
+                    deleteItems(at: changeset.elementDeleted.map { IndexPath(item: $0.element, section: $0.section) })
+                }
+                
+                if !changeset.elementInserted.isEmpty {
+                    insertItems(at: changeset.elementInserted.map { IndexPath(item: $0.element, section: $0.section) })
+                }
+                
+                if !changeset.elementUpdated.isEmpty {
+                    reloadItems(at: changeset.elementUpdated.map { IndexPath(item: $0.element, section: $0.section) })
+                }
+                
+                for (source, target) in changeset.elementMoved {
+                    moveItem(at: IndexPath(item: source.element, section: source.section), to: IndexPath(item: target.element, section: target.section))
+                }
+                
+            }, completion: nil)
         }
+        
     }
 }
 
 extension SKCollectionNodeAdapter: ASCollectionDelegateFlowLayout {
     public func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, insetForSectionAt section: Int) -> UIEdgeInsets {
         if let sectionModel = self.sectionModelForSection(section) {
-            return sectionModel.sectionInset
+            return sectionModel.sectionInsets
         }
         return .zero
     }

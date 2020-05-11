@@ -17,7 +17,7 @@ open class SKSectionModel: NSObject, Differentiable {
     
     public typealias DifferenceIdentifier = String
     
-    public var sectionInset = UIEdgeInsets.zero
+    public var sectionInsets = UIEdgeInsets.zero
     
     public var cellModels: [SKCellNodeModel] = []
     
@@ -27,4 +27,7 @@ open class SKSectionModel: NSObject, Differentiable {
         super.init()
     }
     
+    open func isContentEqual(to source: SKSectionModel) -> Bool {
+        return differenceIdentifier == source.differenceIdentifier
+    }
 }
