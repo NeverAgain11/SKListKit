@@ -44,7 +44,7 @@ public protocol SKCellNodeModelProtocol: Differentiable {
     
     var cellNodeBlock: SKCellNodeBlock? { get }
     var cellNodeTapAction: SKCellNodeTapAction? { get }
-    
+    var cellNodeDisplay: ((ASCellNode)->Void)? { get }
 }
 
 open class SKCellNodeModel: NSObject, SKCellNodeModelProtocol {
@@ -52,6 +52,8 @@ open class SKCellNodeModel: NSObject, SKCellNodeModelProtocol {
     open var cellNodeBlock: SKCellNodeBlock?
     
     open var cellNodeTapAction: SKCellNodeTapAction?
+    
+    open var cellNodeDisplay: ((ASCellNode)->Void)?
     
     public var dataModel: AnyObject?
     
@@ -61,34 +63,48 @@ open class SKCellNodeModel: NSObject, SKCellNodeModelProtocol {
         return skIdentifier
     }
     
-    @discardableResult
-    public func identifier(_ identifier: String) -> SKCellNodeModel {
-        self.skIdentifier = identifier
-        return self
+    open func isContentEqual(to source: SKCellNodeModel) -> Bool {
+        return self.differenceIdentifier == source.differenceIdentifier
     }
+}
+
+open class SKNodeModel<Node, Model: NSObject>: SKCellNodeModel where Node: ASCellNode {
+    let model: Model
     
-    @discardableResult
-    public func cellNode(_ nodeClass: ASCellNode.Type) -> SKCellNodeModel {
-        self.cellNodeBlock = {
-            return nodeClass.init()
-        }
-        return self
-    }
-    
-    @discardableResult
-    public func model<T: AnyObject, Model: NSObject>(_ model: Model, observer: T, tapAction: @escaping ((T, Model)->Void)) -> SKCellNodeModel {
+    public init(_ nodeType: Node.Type, model: Model) {
+        self.model = model
+        
+        super.init()
+        
+        self.skIdentifier = model.skIdentifier
+        
         self.dataModel = model
-        self.identifier(model.skIdentifier)
+        
+        self.cellNodeBlock = {
+            return nodeType.init()
+        }
+    }
+    
+    @discardableResult
+    public func didSelect<Observer: AnyObject>(observer: Observer, tapAction: @escaping ((Observer, Model)->Void)) -> SKNodeModel {
         self.cellNodeTapAction = { [weak self, weak observer] in
             guard let `self` = self,
                 let ob = observer
                 else { return }
-            tapAction(ob, model)
+            tapAction(ob, self.model)
         }
         return self
     }
     
-    open func isContentEqual(to source: SKCellNodeModel) -> Bool {
-        return self.differenceIdentifier == source.differenceIdentifier
+    @discardableResult
+    open func willDisplay<Observer: AnyObject>(observer: Observer, closure: @escaping ((Observer, Node)->Void)) -> SKNodeModel {
+        
+        self.cellNodeDisplay = { [weak observer] node in
+            guard let ob = observer,
+                let node = node as? Node
+                else { return }
+            closure(ob, node)
+        }
+        return self
     }
 }

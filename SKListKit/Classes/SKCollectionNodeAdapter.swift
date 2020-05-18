@@ -34,6 +34,9 @@ public class SKCollectionNodeAdapter: NSObject {
     }()
     
     public private(set) var reloadedIndexPathes: Set<IndexPath> = []
+    
+    public weak var delegate: ASCollectionDelegate?
+    
 }
 
 extension SKCollectionNodeAdapter {
@@ -106,6 +109,54 @@ extension SKCollectionNodeAdapter: ASCollectionDataSource {
         }
     }
     
+    
+}
+
+extension SKCollectionNodeAdapter: ASCollectionDelegate {
+    
+    public func collectionNode(_ collectionNode: ASCollectionNode, didSelectItemAt indexPath: IndexPath) {
+        let cellModel = cellModelForItem(at: indexPath)
+        
+        cellModel?.cellNodeTapAction?()
+    }
+    
+    public func collectionNode(_ collectionNode: ASCollectionNode, willDisplayItemWith node: ASCellNode) {
+        guard let indexPath = collectionNode.indexPath(for: node) else { return }
+        let cellModel = cellModelForItem(at: indexPath)
+        
+        cellModel?.cellNodeDisplay?(node)
+    }
+}
+
+extension SKCollectionNodeAdapter: ASCollectionDelegateFlowLayout {
+    public func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, insetForSectionAt section: Int) -> UIEdgeInsets {
+        if let sectionModel = self.sectionModelForSection(section) {
+            return sectionModel.sectionInsets
+        }
+        return .zero
+    }
+}
+
+extension SKCollectionNodeAdapter {
+    public func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        delegate?.scrollViewDidScroll?(scrollView)
+    }
+    
+    public func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
+        delegate?.scrollViewDidEndDragging?(scrollView, willDecelerate: decelerate)
+    }
+    
+    public func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
+        delegate?.scrollViewDidEndDecelerating?(scrollView)
+    }
+    
+    public func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
+        delegate?.scrollViewWillBeginDragging?(scrollView)
+    }
+}
+
+public extension SKCollectionNodeAdapter {
+    
     public func reloadData() {
         let indexPaths = collectionNode.indexPathsForVisibleItems
         reloadedIndexPathes = Set(indexPaths)
@@ -131,7 +182,6 @@ extension SKCollectionNodeAdapter: ASCollectionDataSource {
             self.sectionModels = data.map { $0.model }
         }
     }
-    
 }
 
 typealias SKArraySection = ArraySection<SKSectionModel, SKCellNodeModel>
@@ -179,23 +229,4 @@ extension ASCollectionNode {
         }
         
     }
-}
-
-extension SKCollectionNodeAdapter: ASCollectionDelegateFlowLayout {
-    public func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, insetForSectionAt section: Int) -> UIEdgeInsets {
-        if let sectionModel = self.sectionModelForSection(section) {
-            return sectionModel.sectionInsets
-        }
-        return .zero
-    }
-}
-
-extension SKCollectionNodeAdapter: ASCollectionDelegate {
-    
-    public func collectionNode(_ collectionNode: ASCollectionNode, didSelectItemAt indexPath: IndexPath) {
-        let cellModel = cellModelForItem(at: indexPath)
-        
-        cellModel?.cellNodeTapAction?()
-    }
-    
 }
