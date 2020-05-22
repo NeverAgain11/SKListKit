@@ -37,6 +37,7 @@ public class SKCollectionNodeAdapter: NSObject {
     
     public weak var delegate: ASCollectionDelegate?
     
+    @objc dynamic public var isScrolling = false
 }
 
 extension SKCollectionNodeAdapter {
@@ -142,16 +143,26 @@ extension SKCollectionNodeAdapter {
         delegate?.scrollViewDidScroll?(scrollView)
     }
     
+    public func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
+        isScrolling = true
+        delegate?.scrollViewWillBeginDragging?(scrollView)
+    }
+    
     public func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
+        if decelerate == false {
+            isScrolling = false
+        }
         delegate?.scrollViewDidEndDragging?(scrollView, willDecelerate: decelerate)
     }
     
     public func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
+        isScrolling = false
         delegate?.scrollViewDidEndDecelerating?(scrollView)
     }
     
-    public func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
-        delegate?.scrollViewWillBeginDragging?(scrollView)
+    public func scrollViewDidEndScrollingAnimation(_ scrollView: UIScrollView) {
+        isScrolling = false
+        delegate?.scrollViewDidEndScrollingAnimation?(scrollView)
     }
 }
 
