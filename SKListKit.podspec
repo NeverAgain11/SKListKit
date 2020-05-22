@@ -8,7 +8,7 @@
 
 Pod::Spec.new do |s|
   s.name             = 'SKListKit'
-  s.version          = '0.1.1'
+  s.version          = '0.1.2'
   s.summary          = 'SKListKit.'
 
 # This description is used to generate tags and improve search results.
@@ -27,9 +27,10 @@ TODO: Add long description of the pod here.
   s.author           = { 'ljk' => 'liujk0723@foxmail.com' }
   s.source           = { :git => 'https://github.com/NeverAgain11/SKListKit.git', :tag => s.version.to_s }
   # s.social_media_url = 'https://twitter.com/<TWITTER_USERNAME>'
-
+  
+  s.swift_version = '5'
   s.ios.deployment_target = '9.0'
-
+  
   s.source_files = 'SKListKit/Classes/**/*'
   
   # s.resource_bundles = {
