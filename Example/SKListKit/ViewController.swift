@@ -20,7 +20,7 @@ class ViewController: UIViewController {
     func setupUI() {
         let sectionModel = SKSectionModel()
         
-        let cellModel = SKCellNodeModel().setCellNodeBlock { () -> ASCellNode in
+        let cellModel = SKCellNodeModel().setCellNodeBlock {
                             return DemoCellNode()
                         }.setCellNodeTapAction {
                             

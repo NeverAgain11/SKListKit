@@ -13,6 +13,10 @@ public class SKCollectionNodeAdapter: NSObject {
     
     public var sectionModels: [SKSectionModel] = []
     
+    fileprivate var pendingSectionModels: [SKSectionModel] = [SKSectionModel]()
+    
+    public private(set) var initialItemsRead: Bool = false
+    
     public lazy var collectionNode: ASCollectionNode = {
         let node = ASCollectionNode(collectionViewLayout: collectionLayout)
         node.registerSupplementaryNode(ofKind: UICollectionView.elementKindSectionHeader)
@@ -61,6 +65,10 @@ extension SKCollectionNodeAdapter {
 
 extension SKCollectionNodeAdapter: ASCollectionDataSource {
     public func numberOfSections(in collectionNode: ASCollectionNode) -> Int {
+        if !initialItemsRead {
+            pendingSectionModels = sectionModels
+            initialItemsRead = true
+        }
         return sectionModels.count
     }
     
@@ -168,18 +176,23 @@ extension SKCollectionNodeAdapter {
 
 public extension SKCollectionNodeAdapter {
     
-    public func reloadData() {
+    func reloadData() {
         let indexPaths = collectionNode.indexPathsForVisibleItems
         reloadedIndexPathes = Set(indexPaths)
         
         collectionNode.reloadData()
     }
     
-    public func apply(_ newSectionModels: [SKSectionModel], animated: Bool = false) {
+    func apply(_ newSectionModels: [SKSectionModel], animated: Bool = false) {
+        if !initialItemsRead {
+            sectionModels = newSectionModels
+            return
+        }
+        
         let indexPaths = collectionNode.indexPathsForVisibleItems
         reloadedIndexPathes = Set(indexPaths)
         
-        let source: [SKArraySection] = sectionModels.map {
+        let source: [SKArraySection] = pendingSectionModels.map {
             return ArraySection(model: $0, elements: $0.cellModels)
         }
         
@@ -188,7 +201,10 @@ public extension SKCollectionNodeAdapter {
         }
         
         let changeset = StagedChangeset(source: source, target: target)
-        
+        if changeset.isEmpty {
+            return
+        }
+        self.pendingSectionModels = newSectionModels
         collectionNode.reload(using: changeset, animated: animated) { (data) in
             self.sectionModels = data.map { $0.model }
         }

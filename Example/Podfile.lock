@@ -5,7 +5,7 @@ PODS:
   - DifferenceKit/Core (1.1.5)
   - DifferenceKit/UIKitExtension (1.1.5):
     - DifferenceKit/Core
-  - SKListKit (0.1.0):
+  - SKListKit (0.1.2):
     - DifferenceKit
     - Texture/Core (~> 2.8)
   - Texture/Core (2.8.1)
@@ -24,7 +24,7 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   DifferenceKit: 516f12e336ed65a3a0665847b5c3cb5cad4bd4ea
-  SKListKit: 4a75086a253286fb3ef2877d9cf38a32d7575322
+  SKListKit: 01d1ce814704bbcc4600182bbced489985976278
   Texture: 8ecf6984065a1e54f06bf97b349ecca28582acd7
 
 PODFILE CHECKSUM: 701f50051261278495af1e96ee8fae6b1401851a
