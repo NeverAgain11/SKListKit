@@ -134,6 +134,18 @@ extension SKCollectionNodeAdapter: ASCollectionDelegate {
         let cellModel = cellModelForItem(at: indexPath)
         
         cellModel?.cellNodeDisplay?(node)
+        
+        let isFirstCell = indexPath.item == 0
+        let isLastCell = self.collectionNode(collectionNode, numberOfItemsInSection: indexPath.section) == indexPath.item + 1
+        
+        if let node = node as? SKCellNodeProtocol {
+            node.isFirstCell = isFirstCell
+            node.isLastCell = isLastCell
+            
+            if let model = cellModel?.dataModel {
+                node.willDisplay(model)
+            }
+        }
     }
 }
 
@@ -205,8 +217,15 @@ public extension SKCollectionNodeAdapter {
             return
         }
         self.pendingSectionModels = newSectionModels
+        
         collectionNode.reload(using: changeset, animated: animated) { (data) in
-            self.sectionModels = data.map { $0.model }
+            let sectionModels = data.map { (section) -> SKSectionModel in
+                let model = section.model
+                model.cellModels = section.elements
+                return model
+            }
+            
+            self.sectionModels = sectionModels
         }
     }
 }

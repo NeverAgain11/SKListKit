@@ -29,6 +29,10 @@ open class SKCellNode: ASCellNode, SKCellNodeProtocol {
         
     }
     
+    open func willDisplay(_ model: AnyObject) {
+        
+    }
+    
 }
 
 func LLog(_ items: Any...,

@@ -33,6 +33,8 @@ public protocol SKCellNodeProtocol: AnyObject {
     var isLastCell: Bool { get set }
     
     func configure(_ model: AnyObject)
+    
+    func willDisplay(_ model: AnyObject)
 }
 
 typealias SKCellModelProtocol = SKCellNodeModelProtocol & Differentiable
