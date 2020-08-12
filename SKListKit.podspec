@@ -8,7 +8,7 @@
 
 Pod::Spec.new do |s|
   s.name             = 'SKListKit'
-  s.version          = '0.1.3'
+  s.version          = '0.1.4'
   s.summary          = 'SKListKit.'
 
 # This description is used to generate tags and improve search results.
@@ -39,7 +39,7 @@ TODO: Add long description of the pod here.
 
   s.frameworks = 'UIKit', 'CoreFoundation'
   
-  s.dependency "Texture/Core", '~> 2.8'
+  s.dependency "Texture/Core", '~> 3.0'
   s.dependency 'DifferenceKit'
   
 end
